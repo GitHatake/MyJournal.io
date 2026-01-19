@@ -135,12 +135,27 @@ ${tagSummary.map(t => `- ${t.tag}: ${formatDuration(t.totalMinutes)} (${t.percen
         }
 
         const data = await response.json();
+        console.log('Gemini API response:', data);
+
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        console.log('Gemini text response:', text);
+
+        if (!text) {
+            throw new Error('Empty response from Gemini');
+        }
+
+        // Remove markdown code blocks if present (```json ... ```)
+        let cleanedText = text;
+        const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch) {
+            cleanedText = codeBlockMatch[1].trim();
+        }
 
         // Parse JSON from response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
-            throw new Error('Failed to parse Gemini response');
+            console.error('Failed to find JSON in response:', cleanedText);
+            throw new Error('Failed to parse Gemini response - no JSON found');
         }
 
         const analysis = JSON.parse(jsonMatch[0]);
