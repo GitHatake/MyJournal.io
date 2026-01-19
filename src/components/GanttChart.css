@@ -1,0 +1,132 @@
+/* Gantt Chart Styles */
+
+.gantt-chart {
+    margin-bottom: var(--spacing-lg);
+}
+
+.gantt-title {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* Time axis */
+.gantt-axis {
+    position: relative;
+    height: 24px;
+    margin-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.gantt-hour {
+    position: absolute;
+    font-size: 10px;
+    color: var(--color-text-muted);
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+/* Bars container */
+.gantt-bars-container {
+    position: relative;
+    min-height: 60px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm) 0;
+    overflow: hidden;
+}
+
+.gantt-bar {
+    position: absolute;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-xs);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.gantt-bar:hover {
+    transform: translateY(-50%) scale(1.02);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+}
+
+.gantt-bar-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Legend */
+.gantt-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-border);
+}
+
+.gantt-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    background: var(--color-bg-tertiary);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.gantt-legend-color {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.gantt-legend-text {
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+/* Responsive: Stack bars vertically on small screens */
+@media (max-width: 399px) {
+    .gantt-bars-container {
+        min-height: auto;
+        padding: var(--spacing-xs);
+    }
+
+    .gantt-bar {
+        position: relative;
+        width: 100% !important;
+        left: 0 !important;
+        top: auto;
+        transform: none;
+        margin-bottom: var(--spacing-xs);
+        height: 32px;
+    }
+
+    .gantt-bar:hover {
+        transform: scale(1.01);
+    }
+
+    .gantt-axis {
+        display: none;
+    }
+}

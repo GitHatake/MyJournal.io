@@ -32,8 +32,8 @@
 }
 
 .pie-chart {
-    width: 160px;
-    height: 160px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
     position: relative;
     box-shadow: var(--shadow-md);
@@ -44,8 +44,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     background: var(--color-bg-secondary);
     border-radius: 50%;
     display: flex;
@@ -53,25 +53,34 @@
     align-items: center;
     justify-content: center;
     box-shadow: inset var(--shadow-sm);
+    padding: 4px;
 }
 
 .pie-chart-total {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--color-text-primary);
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .pie-chart-label {
-    font-size: var(--font-size-xs);
+    font-size: 10px;
     color: var(--color-text-muted);
 }
 
+/* Legend with horizontal scroll */
 .pie-chart-legend {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
     min-width: 0;
+    max-height: 160px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
 }
 
 .legend-item {
@@ -79,26 +88,52 @@
     align-items: center;
     gap: var(--spacing-sm);
     font-size: var(--font-size-sm);
+    padding: var(--spacing-xs) 0;
+    min-width: 0;
 }
 
 .legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
     flex-shrink: 0;
 }
 
 .legend-tag {
     color: var(--color-text-primary);
     font-weight: 500;
-    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 80px;
+    white-space: nowrap;
 }
 
 .legend-value {
     color: var(--color-text-secondary);
-    margin-left: auto;
     white-space: nowrap;
+    font-size: var(--font-size-xs);
+    flex-shrink: 0;
+}
+
+/* Mobile: show legend items in scrollable horizontal list */
+@media (max-width: 399px) {
+    .pie-chart-legend {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+        max-height: none;
+        overflow: visible;
+    }
+
+    .legend-item {
+        background: var(--color-bg-tertiary);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        flex-shrink: 0;
+    }
+
+    .legend-tag {
+        max-width: 100px;
+    }
 }

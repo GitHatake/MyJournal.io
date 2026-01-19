@@ -7,6 +7,7 @@ import { Header } from './components/Header';
 import { TaskInput } from './components/TaskInput';
 import { ActiveTasks } from './components/ActiveTasks';
 import { Timeline } from './components/Timeline';
+import { GanttChart } from './components/GanttChart';
 import { JournalGenerator } from './components/JournalGenerator';
 import { getTodayDateString } from './types/event';
 import './styles/App.css';
@@ -65,6 +66,11 @@ function App() {
                 />
 
                 <Timeline tasks={tasks} />
+
+                <GanttChart
+                    tasks={tasks}
+                    title="📅 タイムライン"
+                />
 
                 <JournalGenerator
                     tasks={tasks}
