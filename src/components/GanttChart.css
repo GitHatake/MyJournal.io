@@ -13,12 +13,42 @@
     gap: var(--spacing-sm);
 }
 
+/* Scrollable container for timeline */
+.gantt-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: var(--spacing-sm);
+}
+
+.gantt-scroll-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.gantt-scroll-container::-webkit-scrollbar-track {
+    background: var(--color-bg-tertiary);
+    border-radius: 3px;
+}
+
+.gantt-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--color-text-muted);
+    border-radius: 3px;
+}
+
+.gantt-timeline {
+    min-width: 500px;
+    position: relative;
+}
+
 /* Time axis */
 .gantt-axis {
     position: relative;
     height: 24px;
     margin-bottom: var(--spacing-sm);
     border-bottom: 1px solid var(--color-border);
+    display: flex;
 }
 
 .gantt-hour {
@@ -32,11 +62,11 @@
 /* Bars container */
 .gantt-bars-container {
     position: relative;
-    min-height: 60px;
+    min-height: 40px;
     background: var(--color-bg-tertiary);
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm) 0;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .gantt-bar {
@@ -70,14 +100,37 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Legend */
-.gantt-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-xs);
+/* Legend - horizontal scrollable */
+.gantt-legend-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
     margin-top: var(--spacing-md);
     padding-top: var(--spacing-sm);
     border-top: 1px solid var(--color-border);
+}
+
+.gantt-legend-wrapper::-webkit-scrollbar {
+    height: 4px;
+}
+
+.gantt-legend-wrapper::-webkit-scrollbar-track {
+    background: var(--color-bg-tertiary);
+    border-radius: 2px;
+}
+
+.gantt-legend-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-text-muted);
+    border-radius: 2px;
+}
+
+.gantt-legend {
+    display: flex;
+    gap: var(--spacing-xs);
+    min-width: max-content;
+    padding-bottom: var(--spacing-xs);
 }
 
 .gantt-legend-item {
@@ -88,6 +141,8 @@
     background: var(--color-bg-tertiary);
     padding: 4px 8px;
     border-radius: var(--radius-sm);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .gantt-legend-color {
@@ -99,34 +154,4 @@
 
 .gantt-legend-text {
     color: var(--color-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px;
-}
-
-/* Responsive: Stack bars vertically on small screens */
-@media (max-width: 399px) {
-    .gantt-bars-container {
-        min-height: auto;
-        padding: var(--spacing-xs);
-    }
-
-    .gantt-bar {
-        position: relative;
-        width: 100% !important;
-        left: 0 !important;
-        top: auto;
-        transform: none;
-        margin-bottom: var(--spacing-xs);
-        height: 32px;
-    }
-
-    .gantt-bar:hover {
-        transform: scale(1.01);
-    }
-
-    .gantt-axis {
-        display: none;
-    }
 }

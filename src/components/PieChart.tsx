@@ -73,19 +73,21 @@ export const PieChart: FC<PieChartProps> = ({ data, title }) => {
                     </div>
                 </div>
 
-                <div className="pie-chart-legend">
-                    {segments.map(({ tag, percentage, color, minutes }) => (
-                        <div key={tag} className="legend-item">
-                            <span
-                                className="legend-color"
-                                style={{ backgroundColor: color }}
-                            ></span>
-                            <span className="legend-tag">{tag}</span>
-                            <span className="legend-value">
-                                {formatDuration(minutes)} ({percentage}%)
-                            </span>
-                        </div>
-                    ))}
+                <div className="pie-chart-legend-wrapper">
+                    <div className="pie-chart-legend">
+                        {segments.map(({ tag, percentage, color, minutes }) => (
+                            <div key={tag} className="legend-item">
+                                <span
+                                    className="legend-color"
+                                    style={{ backgroundColor: color }}
+                                ></span>
+                                <span className="legend-tag">{tag}</span>
+                                <span className="legend-value">
+                                    {formatDuration(minutes)} ({percentage}%)
+                                </span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

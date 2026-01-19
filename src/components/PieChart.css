@@ -20,7 +20,7 @@
     align-items: center;
 }
 
-@media (min-width: 400px) {
+@media (min-width: 500px) {
     .pie-chart-content {
         flex-direction: row;
         align-items: flex-start;
@@ -70,26 +70,47 @@
     color: var(--color-text-muted);
 }
 
-/* Legend with horizontal scroll */
-.pie-chart-legend {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    min-width: 0;
-    max-height: 160px;
-    overflow-y: auto;
-    overflow-x: hidden;
+/* Legend - horizontal scrollable on mobile */
+.pie-chart-legend-wrapper {
     width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: var(--spacing-xs);
+}
+
+.pie-chart-legend-wrapper::-webkit-scrollbar {
+    height: 4px;
+}
+
+.pie-chart-legend-wrapper::-webkit-scrollbar-track {
+    background: var(--color-bg-tertiary);
+    border-radius: 2px;
+}
+
+.pie-chart-legend-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-text-muted);
+    border-radius: 2px;
+}
+
+.pie-chart-legend {
+    display: flex;
+    gap: var(--spacing-sm);
+    min-width: max-content;
+    padding: var(--spacing-xs) 0;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
     font-size: var(--font-size-sm);
-    padding: var(--spacing-xs) 0;
-    min-width: 0;
+    background: var(--color-bg-tertiary);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .legend-color {
@@ -102,38 +123,28 @@
 .legend-tag {
     color: var(--color-text-primary);
     font-weight: 500;
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .legend-value {
     color: var(--color-text-secondary);
-    white-space: nowrap;
     font-size: var(--font-size-xs);
-    flex-shrink: 0;
 }
 
-/* Mobile: show legend items in scrollable horizontal list */
-@media (max-width: 399px) {
+/* Desktop: vertical legend */
+@media (min-width: 500px) {
+    .pie-chart-legend-wrapper {
+        overflow-x: visible;
+        overflow-y: auto;
+        max-height: 160px;
+    }
+
     .pie-chart-legend {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: var(--spacing-xs);
-        max-height: none;
-        overflow: visible;
+        flex-direction: column;
+        min-width: auto;
     }
 
     .legend-item {
-        background: var(--color-bg-tertiary);
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--radius-sm);
-        flex-shrink: 0;
-    }
-
-    .legend-tag {
-        max-width: 100px;
+        background: transparent;
+        padding: var(--spacing-xs) 0;
     }
 }

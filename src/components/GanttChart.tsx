@@ -69,50 +69,57 @@ export const GanttChart: FC<GanttChartProps> = ({ tasks, title }) => {
         <div className="gantt-chart card">
             {title && <h3 className="gantt-title">{title}</h3>}
 
-            {/* Time axis */}
-            <div className="gantt-axis">
-                {hours.map(hour => (
-                    <div
-                        key={hour}
-                        className="gantt-hour"
-                        style={{ left: `${((hour - startHour) / (endHour - startHour + 1)) * 100}%` }}
-                    >
-                        {hour}:00
+            {/* Scrollable timeline container */}
+            <div className="gantt-scroll-container">
+                <div className="gantt-timeline">
+                    {/* Time axis */}
+                    <div className="gantt-axis">
+                        {hours.map(hour => (
+                            <div
+                                key={hour}
+                                className="gantt-hour"
+                                style={{ left: `${((hour - startHour) / (endHour - startHour + 1)) * 100}%` }}
+                            >
+                                {hour}:00
+                            </div>
+                        ))}
                     </div>
-                ))}
+
+                    {/* Task bars container */}
+                    <div className="gantt-bars-container">
+                        {taskBars.map(({ task, left, width, color }) => (
+                            <div
+                                key={task.eventId}
+                                className="gantt-bar"
+                                style={{
+                                    left: `${left}%`,
+                                    width: `${width}%`,
+                                    backgroundColor: color
+                                }}
+                                title={`${task.activityName} (${formatTime(task.startTime)} - ${formatTime(task.endTime!)})`}
+                            >
+                                <span className="gantt-bar-label">{task.activityName}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            {/* Task bars container */}
-            <div className="gantt-bars-container">
-                {taskBars.map(({ task, left, width, color }) => (
-                    <div
-                        key={task.eventId}
-                        className="gantt-bar"
-                        style={{
-                            left: `${left}%`,
-                            width: `${width}%`,
-                            backgroundColor: color
-                        }}
-                        title={`${task.activityName} (${formatTime(task.startTime)} - ${formatTime(task.endTime!)})`}
-                    >
-                        <span className="gantt-bar-label">{task.activityName}</span>
-                    </div>
-                ))}
-            </div>
-
-            {/* Legend */}
-            <div className="gantt-legend">
-                {taskBars.map(({ task, color }) => (
-                    <div key={task.eventId} className="gantt-legend-item">
-                        <span
-                            className="gantt-legend-color"
-                            style={{ backgroundColor: color }}
-                        ></span>
-                        <span className="gantt-legend-text">
-                            {formatTime(task.startTime)} {task.activityName}
-                        </span>
-                    </div>
-                ))}
+            {/* Legend - horizontal scrollable */}
+            <div className="gantt-legend-wrapper">
+                <div className="gantt-legend">
+                    {taskBars.map(({ task, color }) => (
+                        <div key={task.eventId} className="gantt-legend-item">
+                            <span
+                                className="gantt-legend-color"
+                                style={{ backgroundColor: color }}
+                            ></span>
+                            <span className="gantt-legend-text">
+                                {formatTime(task.startTime)} {task.activityName}
+                            </span>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
