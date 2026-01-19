@@ -7,7 +7,7 @@ import { Header } from './components/Header';
 import { TaskInput } from './components/TaskInput';
 import { ActiveTasks } from './components/ActiveTasks';
 import { Timeline } from './components/Timeline';
-import { GanttChart } from './components/GanttChart';
+import { VerticalTimeline } from './components/VerticalTimeline';
 import { JournalGenerator } from './components/JournalGenerator';
 import { getTodayDateString } from './types/event';
 import './styles/App.css';
@@ -26,6 +26,7 @@ function App() {
         journal,
         tasks,
         activeTasks,
+        availableTags,
         isLoading: journalLoading,
         startTask,
         endTask,
@@ -57,7 +58,7 @@ function App() {
                 <TaskInput
                     onStartTask={startTask}
                     onAddMemo={addMemo}
-                    suggestedTags={[]}
+                    suggestedTags={availableTags}
                 />
 
                 <ActiveTasks
@@ -67,7 +68,7 @@ function App() {
 
                 <Timeline tasks={tasks} />
 
-                <GanttChart
+                <VerticalTimeline
                     tasks={tasks}
                     title="📅 タイムライン"
                 />

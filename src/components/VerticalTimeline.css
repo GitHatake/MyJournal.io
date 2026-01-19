@@ -1,0 +1,141 @@
+/* Vertical Timeline Styles (Google Calendar Style) */
+
+.vertical-timeline {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Toggle button */
+.vt-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    margin-bottom: var(--spacing-md);
+}
+
+.vt-title {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+.vt-toggle .toggle-icon {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    transition: transform var(--transition-fast);
+}
+
+.vt-toggle .toggle-icon.expanded {
+    transform: rotate(180deg);
+}
+
+/* Content */
+.vt-content {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--spacing-sm);
+}
+
+.vt-grid {
+    position: relative;
+    min-width: 280px;
+    margin-left: 50px;
+}
+
+/* Hour labels */
+.vt-hours {
+    position: absolute;
+    left: -50px;
+    top: 0;
+    width: 45px;
+}
+
+.vt-hour {
+    position: absolute;
+    font-size: 11px;
+    color: var(--color-text-muted);
+    transform: translateY(-50%);
+    text-align: right;
+    width: 100%;
+    padding-right: var(--spacing-xs);
+}
+
+/* Grid lines */
+.vt-grid-lines {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.vt-grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--color-border);
+}
+
+/* Tasks container */
+.vt-tasks {
+    position: relative;
+    margin-left: var(--spacing-xs);
+}
+
+/* Individual task block */
+.vt-task {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    overflow: hidden;
+    border-left: 4px solid;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.vt-task:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+}
+
+.vt-task-name {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.vt-task-time {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 2px;
+}
+
+.vt-task-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.vt-tag {
+    font-size: 9px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 1px 4px;
+    border-radius: 2px;
+}
