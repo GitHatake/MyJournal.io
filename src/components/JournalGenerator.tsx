@@ -2,7 +2,8 @@
 
 import { FC, useState } from 'react';
 import { JournalAnalysis, generateJournal, calculateTagSummary } from '../services/gemini';
-import { Task, JournalEvent, MOOD_EMOJIS, formatDuration } from '../types/event';
+import { Task, JournalEvent, MOOD_EMOJIS } from '../types/event';
+import { PieChart } from './PieChart';
 import './JournalGenerator.css';
 
 interface JournalGeneratorProps {
@@ -58,28 +59,12 @@ export const JournalGenerator: FC<JournalGeneratorProps> = ({ tasks, events, dat
                 </button>
             </div>
 
-            {/* Tag Summary */}
+            {/* Pie Chart for Tag Time Distribution */}
             {tagSummary.length > 0 && (
-                <div className="tag-summary card">
-                    <h3>📊 今日の時間配分</h3>
-                    <div className="tag-bars">
-                        {tagSummary.map(({ tag, totalMinutes, percentage }) => (
-                            <div key={tag} className="tag-bar-item">
-                                <div className="tag-bar-label">
-                                    <span className="tag-name">{tag}</span>
-                                    <span className="tag-time">{formatDuration(totalMinutes)}</span>
-                                </div>
-                                <div className="tag-bar">
-                                    <div
-                                        className="tag-bar-fill"
-                                        style={{ width: `${percentage}%` }}
-                                    ></div>
-                                </div>
-                                <span className="tag-percentage">{percentage}%</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <PieChart
+                    data={tagSummary}
+                    title="📊 今日の時間配分"
+                />
             )}
 
             {error && (
