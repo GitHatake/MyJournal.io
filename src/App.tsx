@@ -7,6 +7,8 @@ import { Header } from './components/Header';
 import { TaskInput } from './components/TaskInput';
 import { ActiveTasks } from './components/ActiveTasks';
 import { Timeline } from './components/Timeline';
+import { JournalGenerator } from './components/JournalGenerator';
+import { getTodayDateString } from './types/event';
 import './styles/App.css';
 
 function App() {
@@ -20,6 +22,7 @@ function App() {
     } = useAuth();
 
     const {
+        journal,
         tasks,
         activeTasks,
         isLoading: journalLoading,
@@ -62,6 +65,12 @@ function App() {
                 />
 
                 <Timeline tasks={tasks} />
+
+                <JournalGenerator
+                    tasks={tasks}
+                    events={journal?.events || []}
+                    date={getTodayDateString()}
+                />
             </main>
         </div>
     );
