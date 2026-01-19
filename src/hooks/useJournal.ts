@@ -34,13 +34,16 @@ interface UseJournalReturn {
     refresh: () => Promise<void>;
 }
 
-// Get yesterday's date string (local timezone)
+// Get yesterday's date string (JST)
 const getYesterdayDateString = (): string => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    // Current time in JST (UTC + 9 hours)
+    const nowJST = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    // Yesterday in JST (subtract 24 hours)
+    const yesterdayJST = new Date(nowJST.getTime() - 24 * 60 * 60 * 1000);
+
+    const year = yesterdayJST.getUTCFullYear();
+    const month = String(yesterdayJST.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(yesterdayJST.getUTCDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
 

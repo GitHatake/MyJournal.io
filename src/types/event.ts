@@ -69,14 +69,20 @@ export const generateEventId = (): string => {
     return crypto.randomUUID();
 };
 
+// Helper to get JST date object (shifted by +9h from UTC)
+const getJSTDate = (date: Date = new Date()): Date => {
+    return new Date(date.getTime() + 9 * 60 * 60 * 1000);
+};
+
 // Format timestamp (JST timezone: +09:00)
 export const formatTimestamp = (date: Date = new Date()): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const jst = getJSTDate(date);
+    const year = jst.getUTCFullYear();
+    const month = String(jst.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(jst.getUTCDate()).padStart(2, '0');
+    const hours = String(jst.getUTCHours()).padStart(2, '0');
+    const minutes = String(jst.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(jst.getUTCSeconds()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+09:00`;
 };
 
@@ -100,12 +106,12 @@ export const formatDuration = (minutes: number): string => {
     return mins > 0 ? `${hours}時間${mins}分` : `${hours}時間`;
 };
 
-// Get today's date string (local timezone)
+// Get today's date string (JST)
 export const getTodayDateString = (): string => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const jst = getJSTDate(new Date());
+    const year = jst.getUTCFullYear();
+    const month = String(jst.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(jst.getUTCDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
 
