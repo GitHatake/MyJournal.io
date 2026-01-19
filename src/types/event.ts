@@ -94,10 +94,13 @@ export const formatDuration = (minutes: number): string => {
     return mins > 0 ? `${hours}時間${mins}分` : `${hours}時間`;
 };
 
-// Get today's date string
+// Get today's date string (local timezone)
 export const getTodayDateString = (): string => {
     const now = new Date();
-    return now.toISOString().split('T')[0];
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
 // Format time for display (HH:MM)
