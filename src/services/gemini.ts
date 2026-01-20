@@ -40,23 +40,24 @@ const prepareTasksForAnalysis = (tasks: Task[]): string => {
 };
 
 // Calculate tag time summary
-// When a task has multiple tags, the time is divided equally among them
+// Each tag gets the full task time (not divided)
+// Percentage is calculated as (tag time / actual total work time) * 100
+// Percentages can add up to more than 100% when tasks have multiple tags
 export const calculateTagSummary = (tasks: Task[]): TagTimeSummary[] => {
     const completedTasks = tasks.filter(t => !t.isActive && t.duration);
     const tagMinutes = new Map<string, number>();
-    let totalMinutes = 0;
+    let actualTotalMinutes = 0;
 
     for (const task of completedTasks) {
         const duration = task.duration || 0;
-        totalMinutes += duration;
+        actualTotalMinutes += duration;
 
         if (task.tags.length === 0) {
             tagMinutes.set('その他', (tagMinutes.get('その他') || 0) + duration);
         } else {
-            // Divide time equally among tags
-            const timePerTag = duration / task.tags.length;
+            // Each tag gets the full task time
             for (const tag of task.tags) {
-                tagMinutes.set(tag, (tagMinutes.get(tag) || 0) + timePerTag);
+                tagMinutes.set(tag, (tagMinutes.get(tag) || 0) + duration);
             }
         }
     }
@@ -65,8 +66,9 @@ export const calculateTagSummary = (tasks: Task[]): TagTimeSummary[] => {
     for (const [tag, minutes] of tagMinutes) {
         summary.push({
             tag,
-            totalMinutes: Math.round(minutes),
-            percentage: totalMinutes > 0 ? Math.round((minutes / totalMinutes) * 100) : 0
+            totalMinutes: minutes,
+            // Percentage based on actual work time (can be > 100% total)
+            percentage: actualTotalMinutes > 0 ? Math.round((minutes / actualTotalMinutes) * 100) : 0
         });
     }
 

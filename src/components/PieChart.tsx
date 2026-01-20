@@ -1,4 +1,6 @@
 // Pie Chart Component for Tag Time Distribution
+// Displays percentage of time spent on each tag relative to total work time
+// When tasks have multiple tags, percentages can sum to > 100%
 
 import { FC } from 'react';
 import { TagTimeSummary } from '../services/gemini';
@@ -8,6 +10,7 @@ import './PieChart.css';
 interface PieChartProps {
     data: TagTimeSummary[];
     title?: string;
+    actualTotalMinutes: number; // Actual work time (sum of task durations)
 }
 
 // Color palette for chart segments
@@ -24,29 +27,30 @@ const CHART_COLORS = [
     '#f59e0b', // Amber
 ];
 
-export const PieChart: FC<PieChartProps> = ({ data, title }) => {
+export const PieChart: FC<PieChartProps> = ({ data, title, actualTotalMinutes }) => {
     if (data.length === 0) {
         return null;
     }
 
-    // Calculate total and create segments
-    const total = data.reduce((sum, item) => sum + item.totalMinutes, 0);
+    // Calculate sum of all tag minutes (for normalizing pie segments)
+    const tagTotalMinutes = data.reduce((sum, item) => sum + item.totalMinutes, 0);
 
-    // Build conic gradient string
+    // Build conic gradient string (normalized to 100%)
     let currentAngle = 0;
     const gradientParts: string[] = [];
     const segments: Array<{ tag: string; percentage: number; color: string; minutes: number }> = [];
 
     data.forEach((item, index) => {
         const color = CHART_COLORS[index % CHART_COLORS.length];
-        const percentage = (item.totalMinutes / total) * 100;
+        // Normalize segment size to fit within 100% of the pie
+        const normalizedPercentage = (item.totalMinutes / tagTotalMinutes) * 100;
         const startAngle = currentAngle;
-        const endAngle = currentAngle + percentage;
+        const endAngle = currentAngle + normalizedPercentage;
 
         gradientParts.push(`${color} ${startAngle}% ${endAngle}%`);
         segments.push({
             tag: item.tag,
-            percentage: item.percentage,
+            percentage: item.percentage, // Display percentage (relative to actual work time)
             color,
             minutes: item.totalMinutes
         });
@@ -67,7 +71,7 @@ export const PieChart: FC<PieChartProps> = ({ data, title }) => {
                         style={{ background: conicGradient }}
                     >
                         <div className="pie-chart-center">
-                            <span className="pie-chart-total">{formatDuration(total)}</span>
+                            <span className="pie-chart-total">{formatDuration(actualTotalMinutes)}</span>
                             <span className="pie-chart-label">合計</span>
                         </div>
                     </div>
@@ -83,7 +87,7 @@ export const PieChart: FC<PieChartProps> = ({ data, title }) => {
                                 ></span>
                                 <span className="legend-tag">{tag}</span>
                                 <span className="legend-value">
-                                    {Math.round(percentage)}% ({formatDuration(minutes)})
+                                    {percentage}% ({formatDuration(minutes)})
                                 </span>
                             </div>
                         ))}

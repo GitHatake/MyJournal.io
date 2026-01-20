@@ -20,6 +20,9 @@ export const JournalGenerator: FC<JournalGeneratorProps> = ({ tasks, events, dat
     const completedTasks = tasks.filter(t => !t.isActive);
     const tagSummary = calculateTagSummary(tasks);
 
+    // Calculate actual total work time (sum of all task durations)
+    const actualTotalMinutes = completedTasks.reduce((sum, t) => sum + (t.duration || 0), 0);
+
     const handleGenerate = async () => {
         setIsGenerating(true);
         setError(null);
@@ -64,6 +67,7 @@ export const JournalGenerator: FC<JournalGeneratorProps> = ({ tasks, events, dat
                 <PieChart
                     data={tagSummary}
                     title="📊 今日の時間配分"
+                    actualTotalMinutes={actualTotalMinutes}
                 />
             )}
 
