@@ -82,7 +82,11 @@ const eventsToTasks = (
     const filteredTasks = Array.from(taskMap.values()).filter(task => {
         if (task.isActive) return true;
         if (task.endTime) {
-            const endDate = task.endTime.toISOString().split('T')[0];
+            // Use local date format instead of toISOString (which returns UTC)
+            const endYear = task.endTime.getFullYear();
+            const endMonth = String(task.endTime.getMonth() + 1).padStart(2, '0');
+            const endDay = String(task.endTime.getDate()).padStart(2, '0');
+            const endDate = `${endYear}-${endMonth}-${endDay}`;
             return endDate === today;
         }
         return false;
