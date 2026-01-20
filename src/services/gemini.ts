@@ -40,6 +40,7 @@ const prepareTasksForAnalysis = (tasks: Task[]): string => {
 };
 
 // Calculate tag time summary
+// When a task has multiple tags, the time is divided equally among them
 export const calculateTagSummary = (tasks: Task[]): TagTimeSummary[] => {
     const completedTasks = tasks.filter(t => !t.isActive && t.duration);
     const tagMinutes = new Map<string, number>();
@@ -52,8 +53,10 @@ export const calculateTagSummary = (tasks: Task[]): TagTimeSummary[] => {
         if (task.tags.length === 0) {
             tagMinutes.set('その他', (tagMinutes.get('その他') || 0) + duration);
         } else {
+            // Divide time equally among tags
+            const timePerTag = duration / task.tags.length;
             for (const tag of task.tags) {
-                tagMinutes.set(tag, (tagMinutes.get(tag) || 0) + duration);
+                tagMinutes.set(tag, (tagMinutes.get(tag) || 0) + timePerTag);
             }
         }
     }
@@ -62,7 +65,7 @@ export const calculateTagSummary = (tasks: Task[]): TagTimeSummary[] => {
     for (const [tag, minutes] of tagMinutes) {
         summary.push({
             tag,
-            totalMinutes: minutes,
+            totalMinutes: Math.round(minutes),
             percentage: totalMinutes > 0 ? Math.round((minutes / totalMinutes) * 100) : 0
         });
     }

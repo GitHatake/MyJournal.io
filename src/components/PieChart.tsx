@@ -83,7 +83,7 @@ export const PieChart: FC<PieChartProps> = ({ data, title }) => {
                                 ></span>
                                 <span className="legend-tag">{tag}</span>
                                 <span className="legend-value">
-                                    {formatDuration(minutes)} ({percentage}%)
+                                    {Math.round(percentage)}% ({formatDuration(minutes)})
                                 </span>
                             </div>
                         ))}
