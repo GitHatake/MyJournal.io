@@ -147,10 +147,19 @@ export const useJournal = (isSignedIn: boolean): UseJournalReturn => {
 
         try {
             // Load today and yesterday for multi-day task support
+            const todayStr = getTodayDateString();
+            const yesterdayStr = getYesterdayDateString();
+
+            console.log('[loadToday] Loading dates - Today:', todayStr, 'Yesterday:', yesterdayStr);
+
             const [todayData, yesterdayData] = await Promise.all([
-                loadJournal(getTodayDateString()),
-                loadJournal(getYesterdayDateString())
+                loadJournal(todayStr),
+                loadJournal(yesterdayStr)
             ]);
+
+            console.log('[loadToday] Today events loaded:', todayData.events.length);
+            console.log('[loadToday] Yesterday events loaded:', yesterdayData.events.length);
+            console.log('[loadToday] Yesterday data:', JSON.stringify(yesterdayData));
 
             setJournal(todayData);
             setTasks(eventsToTasks(todayData.events, yesterdayData.events));
