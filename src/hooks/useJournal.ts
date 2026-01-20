@@ -52,9 +52,15 @@ const eventsToTasks = (
     const taskMap = new Map<string, Task>();
     const allEvents = [...yesterdayEvents, ...todayEvents];
 
+    // Debug: Log event counts
+    console.log('[eventsToTasks] Yesterday events:', yesterdayEvents.length);
+    console.log('[eventsToTasks] Today events:', todayEvents.length);
+    console.log('[eventsToTasks] All events:', allEvents.length);
+
     for (const event of allEvents) {
         if (event.type === 'START') {
             const startEvent = event as StartEvent;
+            console.log('[eventsToTasks] START event:', startEvent.eventId, startEvent.activityName);
             taskMap.set(startEvent.eventId, {
                 eventId: startEvent.eventId,
                 activityName: startEvent.activityName,
@@ -65,6 +71,7 @@ const eventsToTasks = (
         } else if (event.type === 'END') {
             const endEvent = event as EndEvent;
             const task = taskMap.get(endEvent.refEventId);
+            console.log('[eventsToTasks] END event for:', endEvent.refEventId, 'Found task:', !!task);
             if (task) {
                 const endTime = parseTimestamp(endEvent.timestamp);
                 task.endTime = endTime;
@@ -79,18 +86,27 @@ const eventsToTasks = (
 
     // Filter: only include tasks that are active OR ended today
     const today = getTodayDateString();
+    console.log('[eventsToTasks] Today string:', today);
+
     const filteredTasks = Array.from(taskMap.values()).filter(task => {
-        if (task.isActive) return true;
+        if (task.isActive) {
+            console.log('[eventsToTasks] Task is active:', task.activityName);
+            return true;
+        }
         if (task.endTime) {
             // Use local date format instead of toISOString (which returns UTC)
             const endYear = task.endTime.getFullYear();
             const endMonth = String(task.endTime.getMonth() + 1).padStart(2, '0');
             const endDay = String(task.endTime.getDate()).padStart(2, '0');
             const endDate = `${endYear}-${endMonth}-${endDay}`;
-            return endDate === today;
+            const included = endDate === today;
+            console.log('[eventsToTasks] Task:', task.activityName, 'endDate:', endDate, 'included:', included);
+            return included;
         }
         return false;
     });
+
+    console.log('[eventsToTasks] Filtered tasks count:', filteredTasks.length);
 
     return filteredTasks.sort(
         (a, b) => b.startTime.getTime() - a.startTime.getTime()
