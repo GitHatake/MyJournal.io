@@ -21,7 +21,10 @@ const getAuthHeaders = (): HeadersInit => {
 
 // Find or create app folder
 export const getAppFolder = async (): Promise<string> => {
-    if (appFolderId) return appFolderId;
+    if (appFolderId) {
+        console.log('[getAppFolder] Using cached folder ID:', appFolderId);
+        return appFolderId;
+    }
 
     const token = getAccessToken();
     if (!token) throw new Error('Not authenticated');
@@ -30,15 +33,21 @@ export const getAppFolder = async (): Promise<string> => {
     const query = `name='${APP_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
     const searchUrl = `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id,name)`;
 
+    console.log('[getAppFolder] Searching for folder with query:', query);
+
     const searchRes = await fetch(searchUrl, { headers: getAuthHeaders() });
     const searchData = await searchRes.json();
 
+    console.log('[getAppFolder] Search result:', JSON.stringify(searchData));
+
     if (searchData.files && searchData.files.length > 0) {
         appFolderId = searchData.files[0].id;
+        console.log('[getAppFolder] Found existing folder:', appFolderId);
         return appFolderId!;
     }
 
     // Create new folder
+    console.log('[getAppFolder] Creating new folder...');
     const createRes = await fetch(`${DRIVE_API_BASE}/files`, {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -50,6 +59,7 @@ export const getAppFolder = async (): Promise<string> => {
 
     const createData = await createRes.json();
     appFolderId = createData.id;
+    console.log('[getAppFolder] Created new folder:', appFolderId);
     return appFolderId!;
 };
 
@@ -60,8 +70,13 @@ const getFileId = async (date: string): Promise<string | null> => {
     const query = `name='${fileName}' and '${folderId}' in parents and trashed=false`;
     const url = `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id,name)`;
 
+    console.log('[getFileId] Searching for file:', fileName, 'in folder:', folderId);
+    console.log('[getFileId] Query:', query);
+
     const res = await fetch(url, { headers: getAuthHeaders() });
     const data = await res.json();
+
+    console.log('[getFileId] Search result for', fileName, ':', JSON.stringify(data));
 
     return data.files && data.files.length > 0 ? data.files[0].id : null;
 };
