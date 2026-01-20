@@ -68,10 +68,14 @@ const getFileId = async (date: string): Promise<string | null> => {
 
 // Load journal for a specific date
 export const loadJournal = async (date: string = getTodayDateString()): Promise<DailyJournal> => {
+    console.log('[loadJournal] Loading date:', date);
+
     const fileId = await getFileId(date);
+    console.log('[loadJournal] File ID for', date, ':', fileId);
 
     if (!fileId) {
         // Return empty journal if file doesn't exist
+        console.log('[loadJournal] No file found for', date);
         return { date, events: [] };
     }
 
@@ -79,11 +83,15 @@ export const loadJournal = async (date: string = getTodayDateString()): Promise<
     const res = await fetch(url, { headers: getAuthHeaders() });
 
     if (!res.ok) {
-        console.error('Failed to load journal:', res.status);
+        console.error('[loadJournal] Failed to load journal:', res.status);
         return { date, events: [] };
     }
 
     const data = await res.json();
+    console.log('[loadJournal] Raw data for', date, ':', JSON.stringify(data));
+    console.log('[loadJournal] data.events:', data.events);
+    console.log('[loadJournal] data.events length:', data.events ? data.events.length : 'undefined');
+
     return { date, events: data.events || data };
 };
 
