@@ -21,6 +21,21 @@ const TASK_COLORS = [
     '#3b82f6', // Blue
 ];
 
+// Check if task spans multiple days
+const isMultiDayTask = (task: Task): boolean => {
+    if (!task.endTime) return false;
+    const startDate = task.startTime.toDateString();
+    const endDate = task.endTime.toDateString();
+    return startDate !== endDate;
+};
+
+// Get today's date at midnight for comparison
+const getTodayMidnight = (): Date => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+};
+
 export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title }) => {
     const [isExpanded, setIsExpanded] = useState(true);
 
@@ -31,12 +46,38 @@ export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title }) =>
         return null;
     }
 
-    // Find time range
-    const startTimes = completedTasks.map(t => t.startTime.getHours());
-    const endTimes = completedTasks.map(t => t.endTime!.getHours() + 1);
+    const todayMidnight = getTodayMidnight();
 
-    const minHour = Math.max(0, Math.min(...startTimes));
-    const maxHour = Math.min(24, Math.max(...endTimes));
+    // Process tasks for display (handle multi-day tasks)
+    const processedTasks = completedTasks.map(task => {
+        const isMultiDay = isMultiDayTask(task);
+
+        // For multi-day tasks that started yesterday and ended today,
+        // display from midnight (0:00) to endTime
+        let displayStartTime: Date;
+        let displayEndTime: Date = task.endTime!;
+
+        if (isMultiDay && task.startTime < todayMidnight) {
+            // Task started before today - show from midnight
+            displayStartTime = todayMidnight;
+        } else {
+            displayStartTime = task.startTime;
+        }
+
+        return {
+            ...task,
+            displayStartTime,
+            displayEndTime,
+            isMultiDay
+        };
+    });
+
+    // Find time range based on display times
+    const startHours = processedTasks.map(t => t.displayStartTime.getHours());
+    const endHours = processedTasks.map(t => t.displayEndTime.getHours() + 1);
+
+    const minHour = Math.max(0, Math.min(...startHours));
+    const maxHour = Math.min(24, Math.max(...endHours));
 
     // Generate hour labels
     const hours: number[] = [];
@@ -48,9 +89,9 @@ export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title }) =>
     const hourHeight = 60; // pixels per hour
 
     // Calculate position for each task
-    const taskBlocks = completedTasks.map((task, index) => {
-        const startHour = task.startTime.getHours() + task.startTime.getMinutes() / 60;
-        const endHour = task.endTime!.getHours() + task.endTime!.getMinutes() / 60;
+    const taskBlocks = processedTasks.map((task, index) => {
+        const startHour = task.displayStartTime.getHours() + task.displayStartTime.getMinutes() / 60;
+        const endHour = task.displayEndTime.getHours() + task.displayEndTime.getMinutes() / 60;
 
         const top = (startHour - minHour) * hourHeight;
         const height = Math.max((endHour - startHour) * hourHeight, 30); // Min 30px
@@ -105,7 +146,7 @@ export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title }) =>
                             {taskBlocks.map(({ task, top, height, color }) => (
                                 <div
                                     key={task.eventId}
-                                    className="vt-task"
+                                    className={`vt-task ${task.isMultiDay ? 'vt-task-multiday' : ''}`}
                                     style={{
                                         top: `${top}px`,
                                         height: `${height}px`,
@@ -113,9 +154,13 @@ export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title }) =>
                                         borderLeftColor: color
                                     }}
                                 >
-                                    <div className="vt-task-name">{task.activityName}</div>
+                                    <div className="vt-task-name">
+                                        {task.isMultiDay && '🌙 '}
+                                        {task.activityName}
+                                    </div>
                                     <div className="vt-task-time">
-                                        {formatTime(task.startTime)} - {formatTime(task.endTime!)}
+                                        {task.isMultiDay ? '(前日から) ' : ''}
+                                        {formatTime(task.displayStartTime)} - {formatTime(task.displayEndTime)}
                                         {task.duration && ` (${formatDuration(task.duration)})`}
                                     </div>
                                     {task.tags.length > 0 && (
