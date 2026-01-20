@@ -1,7 +1,16 @@
 // Google OAuth 2.0 Authentication Service
+// Enhanced with better token persistence and silent re-authentication
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+// Storage keys
+const STORAGE_KEYS = {
+    ACCESS_TOKEN: 'myjournal_access_token',
+    TOKEN_EXPIRY: 'myjournal_token_expiry',
+    USER_INFO: 'myjournal_user_info',
+    LAST_LOGIN: 'myjournal_last_login'
+};
 
 // Types for Google Identity Services
 interface TokenResponse {
@@ -38,6 +47,7 @@ declare global {
 
 let tokenClient: TokenClient | null = null;
 let accessToken: string | null = null;
+let tokenRefreshTimer: number | null = null;
 
 export interface AuthState {
     isAuthenticated: boolean;
@@ -84,10 +94,66 @@ const initTokenClient = () => {
                 console.error('Token error:', response.error);
                 return;
             }
-            accessToken = response.access_token;
-            localStorage.setItem('gapi_access_token', accessToken);
-            localStorage.setItem('gapi_token_expiry', String(Date.now() + response.expires_in * 1000));
+            saveToken(response.access_token, response.expires_in);
         }
+    });
+};
+
+// Save token with expiry
+const saveToken = (token: string, expiresIn: number) => {
+    accessToken = token;
+    const expiryTime = Date.now() + expiresIn * 1000;
+
+    // Save to localStorage
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+    localStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, String(expiryTime));
+    localStorage.setItem(STORAGE_KEYS.LAST_LOGIN, String(Date.now()));
+
+    // Also save to sessionStorage for faster access
+    sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+    sessionStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, String(expiryTime));
+
+    // Schedule token refresh (5 minutes before expiry)
+    scheduleTokenRefresh(expiresIn - 300);
+
+    console.log('[Auth] Token saved, expires in', expiresIn, 'seconds');
+};
+
+// Schedule automatic token refresh
+const scheduleTokenRefresh = (delaySeconds: number) => {
+    if (tokenRefreshTimer) {
+        clearTimeout(tokenRefreshTimer);
+    }
+
+    if (delaySeconds > 0) {
+        tokenRefreshTimer = window.setTimeout(() => {
+            console.log('[Auth] Auto-refreshing token...');
+            silentSignIn().catch(err => {
+                console.warn('[Auth] Silent refresh failed:', err);
+            });
+        }, delaySeconds * 1000);
+    }
+};
+
+// Silent sign-in (no prompt)
+export const silentSignIn = (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        if (!tokenClient) {
+            reject(new Error('Token client not initialized'));
+            return;
+        }
+
+        tokenClient.callback = (response: TokenResponse) => {
+            if (response.error) {
+                reject(new Error(response.error));
+                return;
+            }
+            saveToken(response.access_token, response.expires_in);
+            resolve(response.access_token);
+        };
+
+        // Request token without prompt (will fail if user hasn't granted access before)
+        tokenClient.requestAccessToken({ prompt: '' });
     });
 };
 
@@ -99,53 +165,91 @@ export const signIn = (): Promise<string> => {
             return;
         }
 
+        // Check for stored valid token first
+        const storedToken = getStoredToken();
+        if (storedToken) {
+            accessToken = storedToken;
+            resolve(storedToken);
+            return;
+        }
+
         // Override callback for this request
         tokenClient.callback = (response: TokenResponse) => {
             if (response.error) {
                 reject(new Error(response.error));
                 return;
             }
-            accessToken = response.access_token;
-            localStorage.setItem('gapi_access_token', accessToken);
-            localStorage.setItem('gapi_token_expiry', String(Date.now() + response.expires_in * 1000));
-            resolve(accessToken);
+            saveToken(response.access_token, response.expires_in);
+            resolve(response.access_token);
         };
 
-        // Check for stored token
-        const storedToken = localStorage.getItem('gapi_access_token');
-        const tokenExpiry = localStorage.getItem('gapi_token_expiry');
-
-        if (storedToken && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
-            accessToken = storedToken;
-            resolve(storedToken);
-            return;
-        }
-
-        // Request new token
+        // Try silent sign-in first, fall back to prompt
         tokenClient.requestAccessToken({ prompt: '' });
     });
+};
+
+// Get stored token if still valid
+const getStoredToken = (): string | null => {
+    // Check sessionStorage first (faster)
+    let token = sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    let expiry = sessionStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
+
+    // Fall back to localStorage
+    if (!token) {
+        token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+        expiry = localStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
+    }
+
+    if (token && expiry) {
+        const expiryTime = parseInt(expiry);
+        // Add 60 second buffer to avoid edge cases
+        if (Date.now() < expiryTime - 60000) {
+            // Restore to sessionStorage if from localStorage
+            sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+            sessionStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiry);
+            return token;
+        }
+    }
+
+    return null;
 };
 
 // Sign out
 export const signOut = (): void => {
     if (accessToken) {
         window.google.accounts.oauth2.revoke(accessToken, () => {
-            console.log('Token revoked');
+            console.log('[Auth] Token revoked');
         });
     }
+
+    // Clear token refresh timer
+    if (tokenRefreshTimer) {
+        clearTimeout(tokenRefreshTimer);
+        tokenRefreshTimer = null;
+    }
+
     accessToken = null;
-    localStorage.removeItem('gapi_access_token');
-    localStorage.removeItem('gapi_token_expiry');
-    localStorage.removeItem('user_info');
+
+    // Clear all storage
+    Object.values(STORAGE_KEYS).forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+    });
 };
 
 // Get current access token
 export const getAccessToken = (): string | null => {
-    // Check if stored token is still valid
-    const storedToken = localStorage.getItem('gapi_access_token');
-    const tokenExpiry = localStorage.getItem('gapi_token_expiry');
+    // Check memory first
+    if (accessToken) {
+        const expiry = sessionStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
+        if (expiry && Date.now() < parseInt(expiry) - 60000) {
+            return accessToken;
+        }
+    }
 
-    if (storedToken && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
+    // Check storage
+    const storedToken = getStoredToken();
+    if (storedToken) {
         accessToken = storedToken;
         return storedToken;
     }
@@ -174,20 +278,32 @@ export const fetchUserInfo = async (): Promise<UserInfo | null> => {
             picture: data.picture
         };
 
-        localStorage.setItem('user_info', JSON.stringify(userInfo));
+        // Save to both storages
+        const userInfoStr = JSON.stringify(userInfo);
+        localStorage.setItem(STORAGE_KEYS.USER_INFO, userInfoStr);
+        sessionStorage.setItem(STORAGE_KEYS.USER_INFO, userInfoStr);
+
         return userInfo;
     } catch (error) {
-        console.error('Error fetching user info:', error);
+        console.error('[Auth] Error fetching user info:', error);
         return null;
     }
 };
 
 // Get cached user info
 export const getCachedUserInfo = (): UserInfo | null => {
-    const cached = localStorage.getItem('user_info');
+    // Check sessionStorage first
+    let cached = sessionStorage.getItem(STORAGE_KEYS.USER_INFO);
+    if (!cached) {
+        cached = localStorage.getItem(STORAGE_KEYS.USER_INFO);
+    }
+
     if (cached) {
         try {
-            return JSON.parse(cached);
+            const userInfo = JSON.parse(cached);
+            // Restore to sessionStorage
+            sessionStorage.setItem(STORAGE_KEYS.USER_INFO, cached);
+            return userInfo;
         } catch {
             return null;
         }
@@ -198,4 +314,14 @@ export const getCachedUserInfo = (): UserInfo | null => {
 // Check if authenticated
 export const isAuthenticated = (): boolean => {
     return getAccessToken() !== null;
+};
+
+// Check if user has logged in recently (within 7 days)
+export const hasRecentLogin = (): boolean => {
+    const lastLogin = localStorage.getItem(STORAGE_KEYS.LAST_LOGIN);
+    if (lastLogin) {
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        return parseInt(lastLogin) > sevenDaysAgo;
+    }
+    return false;
 };
