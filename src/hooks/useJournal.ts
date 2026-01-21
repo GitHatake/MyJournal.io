@@ -1,7 +1,7 @@
 // Journal Data Hook
 
 import { useState, useEffect, useCallback } from 'react';
-import { loadJournal, appendEvent, getAllTags } from '../services/drive';
+import { loadJournal, appendEvent, getAllTags, saveJournal } from '../services/drive';
 import {
     DailyJournal,
     JournalEvent,
@@ -32,6 +32,30 @@ interface UseJournalReturn {
     endTask: (eventId: string, description?: string, moodScore?: number, progress?: number) => Promise<void>;
     addMemo: (content: string) => Promise<void>;
     refresh: () => Promise<void>;
+    addManualTask: (
+        name: string,
+        tags: string[],
+        startTime: Date,
+        endTime: Date,
+        description?: string,
+        moodScore?: number,
+        progress?: number,
+        targetDate?: string
+    ) => Promise<void>;
+    updateTask: (
+        eventId: string,
+        updates: {
+            activityName?: string;
+            tags?: string[];
+            startTime?: Date;
+            endTime?: Date;
+            description?: string;
+            moodScore?: number;
+            progress?: number;
+        },
+        targetDate?: string
+    ) => Promise<void>;
+    deleteTask: (eventId: string, targetDate?: string) => Promise<void>;
 }
 
 // Get yesterday's date string (local timezone, assumed JST)
@@ -247,6 +271,147 @@ export const useJournal = (isSignedIn: boolean): UseJournalReturn => {
         await loadToday();
     }, [loadToday]);
 
+    // Add a manual task with specified start and end times
+    const addManualTask = useCallback(async (
+        name: string,
+        tags: string[],
+        startTime: Date,
+        endTime: Date,
+        description?: string,
+        moodScore?: number,
+        progress?: number,
+        targetDate?: string
+    ): Promise<void> => {
+        const eventId = generateEventId();
+        const date = targetDate || getTodayDateString();
+
+        // Format timestamps
+        const formatDate = (d: Date): string => {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+09:00`;
+        };
+
+        const startEvent: StartEvent = {
+            eventId,
+            type: 'START',
+            timestamp: formatDate(startTime),
+            activityName: name,
+            tags
+        };
+
+        const endEvent: EndEvent = {
+            refEventId: eventId,
+            type: 'END',
+            timestamp: formatDate(endTime),
+            description: description || '',
+            moodScore: moodScore || 3,
+            progress: progress || 100
+        };
+
+        // Load existing journal for target date and append events
+        const existingJournal = await loadJournal(date);
+        const updatedJournal: DailyJournal = {
+            date,
+            events: [...existingJournal.events, startEvent, endEvent]
+        };
+
+        await saveJournal(updatedJournal);
+        await loadDate(date);
+    }, [loadDate]);
+
+    // Update an existing task
+    const updateTask = useCallback(async (
+        eventId: string,
+        updates: {
+            activityName?: string;
+            tags?: string[];
+            startTime?: Date;
+            endTime?: Date;
+            description?: string;
+            moodScore?: number;
+            progress?: number;
+        },
+        targetDate?: string
+    ): Promise<void> => {
+        const date = targetDate || getTodayDateString();
+        const existingJournal = await loadJournal(date);
+
+        const formatDate = (d: Date): string => {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+09:00`;
+        };
+
+        const updatedEvents = existingJournal.events.map(event => {
+            // Update START event
+            if (event.type === 'START' && (event as StartEvent).eventId === eventId) {
+                const startEvent = event as StartEvent;
+                return {
+                    ...startEvent,
+                    activityName: updates.activityName ?? startEvent.activityName,
+                    tags: updates.tags ?? startEvent.tags,
+                    timestamp: updates.startTime ? formatDate(updates.startTime) : startEvent.timestamp
+                };
+            }
+            // Update END event
+            if (event.type === 'END' && (event as EndEvent).refEventId === eventId) {
+                const endEvent = event as EndEvent;
+                return {
+                    ...endEvent,
+                    timestamp: updates.endTime ? formatDate(updates.endTime) : endEvent.timestamp,
+                    description: updates.description ?? endEvent.description,
+                    moodScore: updates.moodScore ?? endEvent.moodScore,
+                    progress: updates.progress ?? endEvent.progress
+                };
+            }
+            return event;
+        });
+
+        const updatedJournal: DailyJournal = {
+            date,
+            events: updatedEvents
+        };
+
+        await saveJournal(updatedJournal);
+        await loadDate(date);
+    }, [loadDate]);
+
+    // Delete a task (remove both START and END events)
+    const deleteTask = useCallback(async (
+        eventId: string,
+        targetDate?: string
+    ): Promise<void> => {
+        const date = targetDate || getTodayDateString();
+        const existingJournal = await loadJournal(date);
+
+        const filteredEvents = existingJournal.events.filter(event => {
+            if (event.type === 'START' && (event as StartEvent).eventId === eventId) {
+                return false;
+            }
+            if (event.type === 'END' && (event as EndEvent).refEventId === eventId) {
+                return false;
+            }
+            return true;
+        });
+
+        const updatedJournal: DailyJournal = {
+            date,
+            events: filteredEvents
+        };
+
+        await saveJournal(updatedJournal);
+        await loadDate(date);
+    }, [loadDate]);
+
     // Auto-load on sign in
     useEffect(() => {
         if (isSignedIn) {
@@ -271,6 +436,9 @@ export const useJournal = (isSignedIn: boolean): UseJournalReturn => {
         startTask,
         endTask,
         addMemo,
-        refresh
+        refresh,
+        addManualTask,
+        updateTask,
+        deleteTask
     };
 };

@@ -10,12 +10,15 @@ import { ActiveTasks } from './components/ActiveTasks';
 import { Timeline } from './components/Timeline';
 import { VerticalTimeline } from './components/VerticalTimeline';
 import { JournalGenerator } from './components/JournalGenerator';
-import { getTodayDateString } from './types/event';
+import { TaskEditModal } from './components/TaskEditModal';
+import { Task, getTodayDateString } from './types/event';
 import './styles/App.css';
 
 function App() {
     const todayDateString = getTodayDateString();
     const [selectedDate, setSelectedDate] = useState(todayDateString);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
     const {
         isLoading: authLoading,
@@ -36,7 +39,10 @@ function App() {
         endTask,
         addMemo,
         refresh,
-        loadDate
+        loadDate,
+        updateTask,
+        deleteTask,
+        addManualTask
     } = useJournal(isSignedIn);
 
     const isViewingPast = selectedDate !== todayDateString;
@@ -58,6 +64,50 @@ function App() {
         } else {
             await loadDate(selectedDate);
         }
+    };
+
+    // Handle task edit
+    const handleEditTask = (task: Task) => {
+        setEditingTask(task);
+    };
+
+    // Handle save task edits
+    const handleSaveTask = async (updates: Parameters<typeof updateTask>[1]) => {
+        if (!editingTask) return;
+
+        setIsEditSubmitting(true);
+        try {
+            await updateTask(editingTask.eventId, updates, selectedDate);
+            setEditingTask(null);
+        } finally {
+            setIsEditSubmitting(false);
+        }
+    };
+
+    // Handle delete task
+    const handleDeleteTask = async () => {
+        if (!editingTask) return;
+
+        setIsEditSubmitting(true);
+        try {
+            await deleteTask(editingTask.eventId, selectedDate);
+            setEditingTask(null);
+        } finally {
+            setIsEditSubmitting(false);
+        }
+    };
+
+    // Handle manual task addition
+    const handleManualTask = async (
+        name: string,
+        tags: string[],
+        startTime: Date,
+        endTime: Date,
+        description?: string,
+        moodScore?: number,
+        progress?: number
+    ) => {
+        await addManualTask(name, tags, startTime, endTime, description, moodScore, progress, selectedDate);
     };
 
     // Show login screen if not authenticated
@@ -91,6 +141,7 @@ function App() {
                             onStartTask={startTask}
                             onAddMemo={addMemo}
                             suggestedTags={availableTags}
+                            onManualTask={handleManualTask}
                         />
 
                         <ActiveTasks
@@ -104,7 +155,7 @@ function App() {
                 {isViewingPast && (
                     <div className="past-notice card">
                         <span className="past-notice-icon">📅</span>
-                        <span className="past-notice-text">過去の日付を閲覧中（編集不可）</span>
+                        <span className="past-notice-text">過去の日付を閲覧中（タップで編集可能）</span>
                     </div>
                 )}
 
@@ -113,6 +164,7 @@ function App() {
                 <VerticalTimeline
                     tasks={tasks}
                     title="📅 タイムライン"
+                    onEditTask={handleEditTask}
                 />
 
                 <JournalGenerator
@@ -121,6 +173,18 @@ function App() {
                     date={selectedDate}
                 />
             </main>
+
+            {/* Task Edit Modal */}
+            {editingTask && (
+                <TaskEditModal
+                    task={editingTask}
+                    onClose={() => setEditingTask(null)}
+                    onSave={handleSaveTask}
+                    onDelete={handleDeleteTask}
+                    isSubmitting={isEditSubmitting}
+                    suggestedTags={availableTags}
+                />
+            )}
         </div>
     );
 }

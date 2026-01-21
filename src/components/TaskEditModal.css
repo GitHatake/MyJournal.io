@@ -1,0 +1,200 @@
+/* Task Edit Modal Styles */
+
+.task-edit-modal {
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.task-edit-modal .modal-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-text-primary);
+}
+
+.task-edit-modal .modal-field {
+    margin-bottom: var(--spacing-md);
+}
+
+.task-edit-modal .modal-field label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+/* Tags editing */
+.tags-edit-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.current-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+.editable-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding-right: 4px;
+}
+
+.tag-remove-btn {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.tag-remove-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.tag-input-row {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.tag-input {
+    flex: 1;
+}
+
+.suggested-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+.suggested-tag {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+    border: none;
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+}
+
+.suggested-tag:hover {
+    opacity: 1;
+}
+
+/* Time fields */
+.time-fields {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.time-field {
+    flex: 1;
+}
+
+.time-field label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.time-input {
+    width: 100%;
+    text-align: center;
+}
+
+/* Actions */
+.task-edit-modal .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.action-right {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.delete-btn {
+    background: var(--color-danger);
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
+
+.delete-btn.confirm {
+    background: #b91c1c;
+    animation: pulse 0.5s ease-in-out;
+}
+
+.btn-danger {
+    background: var(--color-danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+/* Mood selector (reuse from ActiveTasks) */
+.task-edit-modal .mood-selector {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.task-edit-modal .mood-btn {
+    flex: 1;
+    padding: var(--spacing-sm);
+    font-size: 1.2rem;
+    background: var(--color-bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.task-edit-modal .mood-btn:hover {
+    background: var(--color-bg-glass);
+}
+
+.task-edit-modal .mood-btn.active {
+    border-color: var(--color-accent-primary);
+    background: rgba(99, 102, 241, 0.2);
+}
+
+/* Progress slider */
+.task-edit-modal .progress-slider {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-full);
+    outline: none;
+}
+
+.task-edit-modal .progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--color-accent-primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
