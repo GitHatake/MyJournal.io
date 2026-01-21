@@ -1,6 +1,6 @@
-// Header Component
+// Header Component with Date Picker
 
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { UserInfo } from '../services/auth';
 import './Header.css';
 
@@ -9,16 +9,50 @@ interface HeaderProps {
     onSignOut: () => void;
     isLoading: boolean;
     onRefresh: () => void;
+    selectedDate: string;
+    onDateChange: (date: string) => void;
+    todayDateString: string;
 }
 
-export const Header: FC<HeaderProps> = ({ userInfo, onSignOut, isLoading, onRefresh }) => {
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('ja-JP', {
+export const Header: FC<HeaderProps> = ({
+    userInfo,
+    onSignOut,
+    isLoading,
+    onRefresh,
+    selectedDate,
+    onDateChange,
+    todayDateString
+}) => {
+    const dateInputRef = useRef<HTMLInputElement>(null);
+
+    const isViewingPast = selectedDate !== todayDateString;
+
+    // Format selected date for display
+    const displayDate = new Date(selectedDate + 'T00:00:00');
+    const dateStr = displayDate.toLocaleDateString('ja-JP', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         weekday: 'short'
     });
+
+    const handleDateClick = () => {
+        // Trigger the hidden date input
+        if (dateInputRef.current) {
+            dateInputRef.current.showPicker();
+        }
+    };
+
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newDate = e.target.value;
+        if (newDate) {
+            onDateChange(newDate);
+        }
+    };
+
+    const handleGoToToday = () => {
+        onDateChange(todayDateString);
+    };
 
     return (
         <header className="app-header safe-area-top">
@@ -26,7 +60,33 @@ export const Header: FC<HeaderProps> = ({ userInfo, onSignOut, isLoading, onRefr
                 <div className="header-left">
                     <h1 className="header-logo">📔</h1>
                     <div className="header-info">
-                        <span className="header-date">{dateStr}</span>
+                        <button
+                            className="date-picker-btn"
+                            onClick={handleDateClick}
+                            title="日付を選択"
+                        >
+                            <span className="header-date">
+                                {isViewingPast && <span className="past-indicator">📆 </span>}
+                                {dateStr}
+                            </span>
+                            <span className="date-picker-icon">▼</span>
+                        </button>
+                        <input
+                            type="date"
+                            ref={dateInputRef}
+                            className="hidden-date-input"
+                            value={selectedDate}
+                            max={todayDateString}
+                            onChange={handleDateChange}
+                        />
+                        {isViewingPast && (
+                            <button
+                                className="btn btn-secondary btn-sm today-btn"
+                                onClick={handleGoToToday}
+                            >
+                                今日に戻る
+                            </button>
+                        )}
                     </div>
                 </div>
 

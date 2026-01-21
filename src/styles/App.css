@@ -12,3 +12,23 @@
     padding-top: var(--spacing-lg);
     padding-bottom: var(--spacing-2xl);
 }
+
+/* Past date viewing notice */
+.past-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    margin-bottom: var(--spacing-lg);
+}
+
+.past-notice-icon {
+    font-size: var(--font-size-xl);
+}
+
+.past-notice-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}

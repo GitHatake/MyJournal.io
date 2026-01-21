@@ -1,5 +1,6 @@
 // Main App Component
 
+import { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useJournal } from './hooks/useJournal';
 import { LoginScreen } from './components/LoginScreen';
@@ -13,6 +14,9 @@ import { getTodayDateString } from './types/event';
 import './styles/App.css';
 
 function App() {
+    const todayDateString = getTodayDateString();
+    const [selectedDate, setSelectedDate] = useState(todayDateString);
+
     const {
         isLoading: authLoading,
         isSignedIn,
@@ -31,8 +35,30 @@ function App() {
         startTask,
         endTask,
         addMemo,
-        refresh
+        refresh,
+        loadDate
     } = useJournal(isSignedIn);
+
+    const isViewingPast = selectedDate !== todayDateString;
+
+    // Handle date change
+    const handleDateChange = async (date: string) => {
+        setSelectedDate(date);
+        if (date === todayDateString) {
+            await refresh();
+        } else {
+            await loadDate(date);
+        }
+    };
+
+    // Handle refresh (always reload selected date)
+    const handleRefresh = async () => {
+        if (selectedDate === todayDateString) {
+            await refresh();
+        } else {
+            await loadDate(selectedDate);
+        }
+    };
 
     // Show login screen if not authenticated
     if (!isSignedIn) {
@@ -51,20 +77,36 @@ function App() {
                 userInfo={userInfo}
                 onSignOut={signOut}
                 isLoading={journalLoading}
-                onRefresh={refresh}
+                onRefresh={handleRefresh}
+                selectedDate={selectedDate}
+                onDateChange={handleDateChange}
+                todayDateString={todayDateString}
             />
 
             <main className="app-main container safe-area-bottom">
-                <TaskInput
-                    onStartTask={startTask}
-                    onAddMemo={addMemo}
-                    suggestedTags={availableTags}
-                />
+                {/* Only show task input and active tasks for today */}
+                {!isViewingPast && (
+                    <>
+                        <TaskInput
+                            onStartTask={startTask}
+                            onAddMemo={addMemo}
+                            suggestedTags={availableTags}
+                        />
 
-                <ActiveTasks
-                    tasks={activeTasks}
-                    onEndTask={endTask}
-                />
+                        <ActiveTasks
+                            tasks={activeTasks}
+                            onEndTask={endTask}
+                        />
+                    </>
+                )}
+
+                {/* Show read-only notice when viewing past */}
+                {isViewingPast && (
+                    <div className="past-notice card">
+                        <span className="past-notice-icon">📅</span>
+                        <span className="past-notice-text">過去の日付を閲覧中（編集不可）</span>
+                    </div>
+                )}
 
                 <Timeline tasks={tasks} />
 
@@ -76,7 +118,7 @@ function App() {
                 <JournalGenerator
                     tasks={tasks}
                     events={journal?.events || []}
-                    date={getTodayDateString()}
+                    date={selectedDate}
                 />
             </main>
         </div>
