@@ -159,12 +159,14 @@ function App() {
                     </div>
                 )}
 
-                <Timeline tasks={tasks} />
+                <Timeline
+                    tasks={tasks}
+                    onEditTask={handleEditTask}
+                />
 
                 <VerticalTimeline
                     tasks={tasks}
                     title="📅 タイムライン"
-                    onEditTask={handleEditTask}
                 />
 
                 <JournalGenerator

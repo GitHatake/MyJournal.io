@@ -7,7 +7,6 @@ import './VerticalTimeline.css';
 interface VerticalTimelineProps {
     tasks: Task[];
     title?: string;
-    onEditTask?: (task: Task) => void;
 }
 
 // Color palette for task blocks
@@ -37,7 +36,7 @@ const getTodayMidnight = (): Date => {
     return today;
 };
 
-export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title, onEditTask }) => {
+export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title }) => {
     const [isExpanded, setIsExpanded] = useState(true);
 
     // Filter completed tasks only
@@ -246,7 +245,7 @@ export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title, onEd
                             {taskBlocks.map(({ task, top, height, color, leftPercent, widthPercent, gap }) => (
                                 <div
                                     key={task.eventId}
-                                    className={`vt-task ${task.isMultiDay ? 'vt-task-multiday' : ''} ${onEditTask ? 'vt-task-editable' : ''}`}
+                                    className={`vt-task ${task.isMultiDay ? 'vt-task-multiday' : ''}`}
                                     style={{
                                         top: `${top}px`,
                                         height: `${height}px`,
@@ -255,7 +254,6 @@ export const VerticalTimeline: FC<VerticalTimelineProps> = ({ tasks, title, onEd
                                         backgroundColor: color,
                                         borderLeftColor: color
                                     }}
-                                    onClick={() => onEditTask && onEditTask(task)}
                                 >
                                     <div className="vt-task-name">
                                         {task.isMultiDay && '🌙 '}

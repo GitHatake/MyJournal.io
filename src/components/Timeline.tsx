@@ -6,9 +6,10 @@ import './Timeline.css';
 
 interface TimelineProps {
     tasks: Task[];
+    onEditTask?: (task: Task) => void;
 }
 
-export const Timeline: FC<TimelineProps> = ({ tasks }) => {
+export const Timeline: FC<TimelineProps> = ({ tasks, onEditTask }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const completedTasks = tasks.filter(t => !t.isActive);
 
@@ -50,7 +51,10 @@ export const Timeline: FC<TimelineProps> = ({ tasks }) => {
                                 {index < completedTasks.length - 1 && <div className="timeline-line"></div>}
                             </div>
 
-                            <div className="timeline-content card">
+                            <div
+                                className={`timeline-content card ${onEditTask ? 'timeline-content-clickable' : ''}`}
+                                onClick={() => onEditTask && onEditTask(task)}
+                            >
                                 <div className="timeline-header">
                                     <h3 className="timeline-task-name">{task.activityName}</h3>
                                     {task.moodScore && (

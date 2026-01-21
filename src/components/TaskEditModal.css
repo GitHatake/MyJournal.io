@@ -1,9 +1,12 @@
 /* Task Edit Modal Styles */
 
 .task-edit-modal {
-    max-width: 450px;
+    width: 90%;
+    max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
+    margin: auto;
+    /* Center in overlay is handled by modal-overlay flex in App.css, but ensure it doesn't stretch */
 }
 
 .task-edit-modal .modal-title {
