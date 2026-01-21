@@ -45,9 +45,11 @@ const getYesterdayDateString = (): string => {
 };
 
 // Convert events to tasks (supports multi-day tasks)
+// targetDate: the date to filter tasks for (defaults to today)
 const eventsToTasks = (
     todayEvents: JournalEvent[],
-    yesterdayEvents: JournalEvent[] = []
+    yesterdayEvents: JournalEvent[] = [],
+    targetDate?: string
 ): Task[] => {
     const taskMap = new Map<string, Task>();
     const allEvents = [...yesterdayEvents, ...todayEvents];
@@ -84,9 +86,9 @@ const eventsToTasks = (
         }
     }
 
-    // Filter: only include tasks that are active OR ended today
-    const today = getTodayDateString();
-    console.log('[eventsToTasks] Today string:', today);
+    // Filter: only include tasks that are active OR ended on target date
+    const filterDate = targetDate || getTodayDateString();
+    console.log('[eventsToTasks] Filter date:', filterDate);
 
     const filteredTasks = Array.from(taskMap.values()).filter(task => {
         if (task.isActive) {
@@ -99,7 +101,7 @@ const eventsToTasks = (
             const endMonth = String(task.endTime.getMonth() + 1).padStart(2, '0');
             const endDay = String(task.endTime.getDate()).padStart(2, '0');
             const endDate = `${endYear}-${endMonth}-${endDay}`;
-            const included = endDate === today;
+            const included = endDate === filterDate;
             console.log('[eventsToTasks] Task:', task.activityName, 'endDate:', endDate, 'included:', included);
             return included;
         }
@@ -179,7 +181,8 @@ export const useJournal = (isSignedIn: boolean): UseJournalReturn => {
         try {
             const data = await loadJournal(date);
             setJournal(data);
-            setTasks(eventsToTasks(data.events));
+            // Pass the target date so filtering works correctly
+            setTasks(eventsToTasks(data.events, [], date));
         } catch (err) {
             console.error('Failed to load journal:', err);
             setError('ジャーナルの読み込みに失敗しました');
