@@ -1,7 +1,8 @@
 // Journal Generation Component
 
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { JournalAnalysis, generateJournal, calculateTagSummary } from '../services/gemini';
+import { saveAnalysis, loadAnalysis } from '../services/drive';
 import { Task, JournalEvent, MOOD_EMOJIS } from '../types/event';
 import { PieChart } from './PieChart';
 import './JournalGenerator.css';
@@ -14,14 +15,39 @@ interface JournalGeneratorProps {
 
 export const JournalGenerator: FC<JournalGeneratorProps> = ({ tasks, events, date }) => {
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isLoadingCached, setIsLoadingCached] = useState(false);
     const [analysis, setAnalysis] = useState<JournalAnalysis | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isCached, setIsCached] = useState(false);
 
     const completedTasks = tasks.filter(t => !t.isActive);
     const tagSummary = calculateTagSummary(tasks);
 
     // Calculate actual total work time (sum of all task durations)
     const actualTotalMinutes = completedTasks.reduce((sum, t) => sum + (t.duration || 0), 0);
+
+    // Load cached analysis on mount or date change
+    useEffect(() => {
+        const loadCachedAnalysis = async () => {
+            setIsLoadingCached(true);
+            setAnalysis(null);
+            setIsCached(false);
+
+            try {
+                const cached = await loadAnalysis(date);
+                if (cached) {
+                    setAnalysis(cached as JournalAnalysis);
+                    setIsCached(true);
+                }
+            } catch (err) {
+                console.error('Failed to load cached analysis:', err);
+            } finally {
+                setIsLoadingCached(false);
+            }
+        };
+
+        loadCachedAnalysis();
+    }, [date]);
 
     const handleGenerate = async () => {
         setIsGenerating(true);
@@ -30,6 +56,11 @@ export const JournalGenerator: FC<JournalGeneratorProps> = ({ tasks, events, dat
         try {
             const result = await generateJournal(tasks, events, date);
             setAnalysis(result);
+            setIsCached(false);
+
+            // Save to Drive
+            await saveAnalysis(date, result);
+            setIsCached(true);
         } catch (err) {
             setError('ジャーナルの生成に失敗しました');
             console.error(err);
@@ -46,20 +77,32 @@ export const JournalGenerator: FC<JournalGeneratorProps> = ({ tasks, events, dat
         <div className="journal-generator">
             <div className="journal-header">
                 <h2 className="section-title">🤖 AI振り返り</h2>
-                <button
-                    className="btn btn-primary generate-btn"
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                >
-                    {isGenerating ? (
-                        <>
-                            <span className="spinner"></span>
-                            生成中...
-                        </>
-                    ) : (
-                        <>✨ 振り返りを生成</>
+                <div className="journal-actions">
+                    {isCached && (
+                        <span className="cached-indicator">💾 保存済み</span>
                     )}
-                </button>
+                    <button
+                        className="btn btn-primary generate-btn"
+                        onClick={handleGenerate}
+                        disabled={isGenerating || isLoadingCached}
+                    >
+                        {isGenerating ? (
+                            <>
+                                <span className="spinner"></span>
+                                生成中...
+                            </>
+                        ) : isLoadingCached ? (
+                            <>
+                                <span className="spinner"></span>
+                                読込中...
+                            </>
+                        ) : analysis ? (
+                            <>🔄 再生成</>
+                        ) : (
+                            <>✨ 振り返りを生成</>
+                        )}
+                    </button>
+                </div>
             </div>
 
             {/* Pie Chart for Tag Time Distribution */}

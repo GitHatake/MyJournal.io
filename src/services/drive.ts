@@ -198,3 +198,85 @@ export const getAllTags = async (): Promise<Map<string, number>> => {
 
     return tagCounts;
 };
+
+// Analysis file naming: YYYY-MM-DD_analysis.json
+const getAnalysisFileName = (date: string): string => `${date}_analysis.json`;
+
+// Get file ID for analysis file
+const getAnalysisFileId = async (date: string): Promise<string | null> => {
+    const folderId = await getAppFolder();
+    const fileName = getAnalysisFileName(date);
+    const query = `name='${fileName}' and '${folderId}' in parents and trashed=false`;
+    const url = `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id)`;
+
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    const data = await res.json();
+
+    return data.files && data.files.length > 0 ? data.files[0].id : null;
+};
+
+// Save AI analysis to Drive
+export const saveAnalysis = async (date: string, analysis: object): Promise<void> => {
+    const folderId = await getAppFolder();
+    const fileName = getAnalysisFileName(date);
+    const fileId = await getAnalysisFileId(date);
+    const content = JSON.stringify({ date, analysis, savedAt: new Date().toISOString() }, null, 2);
+
+    const metadata = {
+        name: fileName,
+        mimeType: 'application/json',
+        ...(fileId ? {} : { parents: [folderId] })
+    };
+
+    const boundary = '-------314159265358979323846';
+    const delimiter = `\r\n--${boundary}\r\n`;
+    const closeDelimiter = `\r\n--${boundary}--`;
+
+    const multipartBody =
+        delimiter +
+        'Content-Type: application/json\r\n\r\n' +
+        JSON.stringify(metadata) +
+        delimiter +
+        'Content-Type: application/json\r\n\r\n' +
+        content +
+        closeDelimiter;
+
+    const url = fileId
+        ? `${DRIVE_UPLOAD_BASE}/files/${fileId}?uploadType=multipart`
+        : `${DRIVE_UPLOAD_BASE}/files?uploadType=multipart`;
+
+    const method = fileId ? 'PATCH' : 'POST';
+
+    await fetch(url, {
+        method,
+        headers: {
+            Authorization: `Bearer ${getAccessToken()}`,
+            'Content-Type': `multipart/related; boundary=${boundary}`
+        },
+        body: multipartBody
+    });
+
+    console.log('[saveAnalysis] Saved analysis for', date);
+};
+
+// Load AI analysis from Drive
+export const loadAnalysis = async (date: string): Promise<object | null> => {
+    const fileId = await getAnalysisFileId(date);
+
+    if (!fileId) {
+        console.log('[loadAnalysis] No analysis found for', date);
+        return null;
+    }
+
+    const url = `${DRIVE_API_BASE}/files/${fileId}?alt=media`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+
+    if (!res.ok) {
+        console.error('[loadAnalysis] Failed to load analysis:', res.status);
+        return null;
+    }
+
+    const data = await res.json();
+    console.log('[loadAnalysis] Loaded analysis for', date);
+    return data.analysis || null;
+};
