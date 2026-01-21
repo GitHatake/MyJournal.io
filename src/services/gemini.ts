@@ -129,7 +129,7 @@ ${tagSummary.map(t => `- ${t.tag}: ${formatDuration(t.totalMinutes)} (${t.percen
                 }],
                 generationConfig: {
                     temperature: 0.7,
-                    maxOutputTokens: 1024
+                    maxOutputTokens: 8192
                 }
             })
         });
@@ -142,7 +142,8 @@ ${tagSummary.map(t => `- ${t.tag}: ${formatDuration(t.totalMinutes)} (${t.percen
         const data = await response.json();
         console.log('Gemini API response:', data);
 
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        // Join all parts text in case response is split (e.g. thinking process)
+        const text = data.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('') || '';
         console.log('Gemini text response:', text);
 
         if (!text) {
